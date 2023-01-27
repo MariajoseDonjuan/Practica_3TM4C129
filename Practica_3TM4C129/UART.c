@@ -2,33 +2,41 @@
 
 extern void Configurar_UART2(void)
 {
-    SYSCTL->RCGCUART  = (1<<2);   //Paso 1 (RCGCUART) pag.344 UART/modulo0 0->Disable 1->Enable
+    SYSCTL->RCGCUART  = (1<<2);  //ésta función se usa para poder habilitar y deshabilitar //Paso 1 (RCGCUART) pag.344 UART/modulo0 0->Deshabilitar 1->habilitar
     //                    A      B     C     D      E     F 
-    SYSCTL->RCGCGPIO |= (0<<0)|(0<<1)|(0<<2)|(1<<3)|(0<<4)|(0<<5);     //Paso 2 (RCGCGPIO) pag.340 Enable clock port A
+    SYSCTL->RCGCGPIO |= (0<<0)|(0<<1)|(0<<2)|(1<<3)|(0<<4)|(0<<5);     // RGCGPIO 
+   
     //(GPIOAFSEL) pag.671 Enable alternate function
+   
+   //Registro para habilitar los puertos que se van a usar
     GPIOD_AHB->DIR = (0<<4) | (1<<5);//PD4 PD5
+
+    //Es para habilitar la función alterna en caso de ocupar un periferico.
     GPIOD_AHB->AFSEL = (1<<4) | (1<<5);
 
-    //GPIO Port Control (GPIOPCTL) PA0-> U0Rx PA1-> U0Tx pag.688
-    GPIOD_AHB->PCTL = (GPIOD_AHB->PCTL&0xFF00FFFF) | 0x00110000;// (1<<0) | (1<<4);//0x00000011
-    // GPIO Digital Enable (GPIODEN) pag.682
+    //GPIO se usa para controlar los pines que se ursrás con el periferico en mi caso pd4 y pd5 para el serial
+    GPIOD_AHB->PCTL = (GPIOD_AHB->PCTL&0xFF00FFFF) | 0x00110000;
+    
+    // GPIO Digital Enable (GPIODEN) 
+    
     GPIOD_AHB->DEN = (1<<4) | (1<<5);//PD4 PD5
-    //UART0 UART Control (UARTCTL) pag.918 DISABLE!!
+    
+    //UART0 UART Control (UARTCTL) 
     UART2->CTL = (0<<9) | (0<<8) | (0<<0)| (0<<4);
 
    
-    /*
+    /*Cálculos para la velocidad requerida de 57600
     BRD = 20,000,000 / (16 * 57600) = 21.70
     UARTFBRD[DIVFRAC] = integer(0.7 * 64 + 0.5) = 45
     */
     UART2->IBRD = 21;
-    // UART Fractional Baud-Rate Divisor (UARTFBRD) pag.915
+    // UART Fractional Baud-Rate Divisor (UARTFBRD) 
     UART2->FBRD = 45;
-    //  UART Line Control (UARTLCRH) pag.916
+    //  UART Line Control (UARTLCRH) 
     UART2->LCRH = (0x3<<5)|(1<<4);
-    //  UART Clock Configuration(UARTCC) pag.939
+    //  UART Clock Configuration(UARTCC) 
     UART2->CC =(0<<0);
-    //Disable UART0 UART Control (UARTCTL) pag.918
+    //Disable UART0 UART Control (UARTCTL) 
     UART2->CTL = (1<<0) | (1<<8) | (1<<9)| (1<<4);
 
 
